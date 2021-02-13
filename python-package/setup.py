@@ -236,9 +236,9 @@ class InstallLib(install_lib.install_lib):
         outfiles = super().install()
 
         if USER_OPTIONS['use-system-libxgboost'][2] != 0:
-            self.logger.info('Using system libxgboost.')
             lib_path = os.path.join(sys.prefix, 'lib')
             libxgboost = locate_lib([lib_path])
+            self.logger.info('Using system libxgboost: %s', libxgboost)
             msg = 'use-system-libxgboost is specified, but ' + lib_name() + \
                 ' is not found in ' + lib_path + ' or in system paths'
             assert os.path.exists(libxgboost), msg
