@@ -40,12 +40,32 @@ BUILD_TEMP_DIR = None
 def lib_name():
     '''Return platform dependent shared object name.'''
     if system() == 'Linux' or system().upper().endswith('BSD'):
-        name = 'libxgboost.so'
+        return 'libxgboost.so'
     elif system() == 'Darwin':
-        name = 'libxgboost.dylib'
+        return 'libxgboost.dylib'
     elif system() == 'Windows':
-        name = 'xgboost.dll'
-    return name
+        return 'xgboost.dll'
+    raise EnvironmentError('cannot identify platform to infer shared object name')
+
+
+def locate_lib(hints=()):
+    '''Return the absolute path to the pre-built library.'''
+    # check hints
+    for hint in hints:
+        if os.path.isdir(hint):
+            hint = os.path.join(hint, lib_name())
+        if os.path.exists(hint):
+            return os.path.abspath(hint)
+
+    # check system library paths
+    var_name = 'PATH' if system() == 'Windows' else 'LD_LIBRARY_PATH'
+    for path in os.getenv(var_name, '').split(os.pathsep):
+        if path:
+            lib = os.path.join(os.path.expanduser(os.path.expandvars(path)), lib)
+            if os.path.isfile(lib):
+                return lib
+
+    return None
 
 
 def copy_tree(src_dir, target_dir):
@@ -218,9 +238,10 @@ class InstallLib(install_lib.install_lib):
         if USER_OPTIONS['use-system-libxgboost'][2] != 0:
             self.logger.info('Using system libxgboost.')
             lib_path = os.path.join(sys.prefix, 'lib')
+            libxgboost = locate_lib([lib_path])
             msg = 'use-system-libxgboost is specified, but ' + lib_name() + \
-                ' is not found in: ' + lib_path
-            assert os.path.exists(os.path.join(lib_path, lib_name())), msg
+                ' is not found in ' + lib_path + ' or in system paths'
+            assert os.path.exists(libxgboost), msg
             return []
 
         lib_dir = os.path.join(self.install_dir, 'xgboost', 'lib')
