@@ -61,7 +61,7 @@ def locate_lib(hints=()):
     var_name = 'PATH' if system() == 'Windows' else 'LD_LIBRARY_PATH'
     for path in os.getenv(var_name, '').split(os.pathsep):
         if path:
-            lib = os.path.join(os.path.expanduser(os.path.expandvars(path)), lib)
+            lib = os.path.join(os.path.expanduser(os.path.expandvars(path)), lib_name())
             if os.path.isfile(lib):
                 return lib
 
